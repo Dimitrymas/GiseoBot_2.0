@@ -2,11 +2,18 @@ from telebot import types
 from middlewares.time_convert import WeekTools as wt
 from middlewares.user import MiddleUser
 
+
+type_of_work = {39:"Самостоятельная работа", }
+
+
 class DairyController:
     def print_day(printedText, wday):
-        printedText += f"{wt.curr_date(wday['date'])}\n"
+        count = 0
+        printedText += f"\n*{wt.curr_date(wday['date'])}*\n"
+
         for lessons in wday['lessons']:
-            printedText += '*' + lessons['subjectName'] + '*'
+            count += 1
+            printedText += f"   _{count}) {lessons['subjectName']}_"
             mark = ' '
             if 'assignments' in lessons:
                 for a in lessons['assignments']:
@@ -32,11 +39,11 @@ class DairyController:
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             printText = ""
             printedText = ""
-            for wday in im_user.create_json_week(json)['weekDays']:
+            for wday in im_user.get_json_week()['weekDays']:
                 printedText += (DairyController.print_day(printText, wday))
                 button = types.KeyboardButton(wt.curr_day(wday['date']))
                 markup.add(button)
-
+            first = f"*{wt.curr_date(json['weekStart'])} по {wt.curr_date(json['weekEnd'])}*\n"
             button1 = types.KeyboardButton('Следующая неделя')
 
             button2 = types.KeyboardButton('Текущая неделя')
@@ -44,7 +51,9 @@ class DairyController:
             button3 = types.KeyboardButton('Предыдущая неделя')
 
             markup.add(button3, button2, button1)
-            return printedText, markup
+
+            markup.add(types.KeyboardButton('Меню'))
+            return first+printedText, markup
 
     def print_diary_day(datestr, chat_id):
 
@@ -54,6 +63,7 @@ class DairyController:
         printedText = ""
         printText = ""
         for wday in im_user.get_json_week()['weekDays']:
+
             if wday["date"] == datestr:
                 im_user.create_json_day(wday)
                 printedText += (DairyController.print_day(printText, wday))
@@ -86,3 +96,16 @@ class DairyController:
                     return printedText
                 else:
                     return "Не задано"
+
+    def print_past_mand(pastmand):
+        printedText = ""
+        print(pastmand)
+        for m in pastmand:
+            subjectName = m['subjectName']
+            type = type_of_work[m['typeId']]
+            assignmentName = m['assignmentName']
+            date = wt.curr_date(str(m['dueDate']))
+
+            printedText += f"*{subjectName} {type}* \n{assignmentName}\nДата сдачи: {date}"
+
+        return printedText

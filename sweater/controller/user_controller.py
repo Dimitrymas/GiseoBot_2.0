@@ -31,6 +31,7 @@ class UserController:
             SendMessages.send(message.chat.id, "Некорректная комманда")
         else:
             Im_user = MiddleUser.get_user_by_chat(message.chat.id)
+
             Im_user.update(school_id=school.id)
             SendMessages.send(message.chat.id, "Отлично, теперь введите логин от giseo")
             bot.register_next_step_handler(message, UserController.registration_step_3)
@@ -63,19 +64,35 @@ class UserController:
     def get_diary(message):
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         diary = im_user.get_diary()
-        print(diary)
-        SendMessages.send_diary_week(message.chat.id, diary)
+        print("diary:", diary)
 
-    def get_diary_back(message):
-        im_user = MiddleUser.get_user_by_chat(message.chat.id)
-        diary = im_user.get_json_week()
-        SendMessages.send_diary_week(message.chat.id, diary)
+        if diary != "error":
+            SendMessages.send_diary_week(message.chat.id, diary)
+        else:
+            SendMessages.send(message.chat.id, "Неправильный пароль или логин")
+            UserController.registration_step_start(message)
+
+
 
     def get_day(message):
         SendMessages.send_diary_day(message.chat.id, wt.daydate_to_datestr(message.text))
 
     def get_lesson(message):
         SendMessages.send_diary_lesson(message.chat.id, message.text)
+
+    def get_pastmandory(message):
+        im_user = MiddleUser.get_user_by_chat(message.chat.id)
+        pastmand = im_user.get_pastmandory()
+
+
+        if pastmand != None:
+            SendMessages.send_past_mand(message.chat.id, pastmand)
+        else:
+            SendMessages.send(message.chat.id, "Неправильный пароль или логин")
+            UserController.registration_step_start(message)
+
+
+
 
 
 

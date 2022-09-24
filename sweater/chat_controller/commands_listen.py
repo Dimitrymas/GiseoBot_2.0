@@ -9,7 +9,8 @@ def listen_commands(message):
         UserController.start(message)
 
     elif message.text == "/menu":
-        SendMessages.send_menu(message)
+        SendMessages.send(message.chat.id, "Загрузка дневника, немного подождите")
+        SendMessages.send_menu(message.chat.id)
 
     elif message.text == "/diary":
         UserController.get_diary(message)

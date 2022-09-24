@@ -5,7 +5,7 @@ class MiddleUser:
         try:
             User.create(telegram_id=chat_id)
         except:
-            print(Exception)
+            pass
 
     def registration(chat_id, g_password, g_name, school_id):
         user = MiddleUser.get_user_by_chat(chat_id)

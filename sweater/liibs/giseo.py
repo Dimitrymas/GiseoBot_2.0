@@ -28,7 +28,7 @@ class Manager:
         self.studentId = self.getStudentId()
 
 
-    def send(self, path: str, method: str | int = 'GET', params: dict = {}, contentType: str = 'x-www-form-urlencoded',
+    def send(self, path: str, method: str = 'GET', params: dict = {}, contentType: str = 'x-www-form-urlencoded',
              headers: dict = {}, withToken: bool = True, returnJson: bool = True):
         """
         Sending the request to https://giseo.rkomi.ru/webapi
@@ -84,7 +84,7 @@ class Manager:
                 self.auth()
                 return self.send(path, method, params, contentType, headers, withToken, returnJson)
             elif (res.status_code == 409):
-                raise Exception('Incorrect username or password')
+                return "error"
 
     def auth(self):
         res: dict = self.send('auth/getdata', 'POST', {}, 'x-www-form-urlencoded',
@@ -104,10 +104,11 @@ class Manager:
             'pw2': password,
             'ver': res['ver']
         }
-        data = self.send('login', 'POST', post_data, 'x-www-form-urlencoded', {'Referer': 'https://giseo.rkomi.ru/about.html'}, False, True)
 
-        self.token = data['at']
-        self.ver = res['ver']
+        data = self.send('login', 'POST', post_data, 'x-www-form-urlencoded', {'Referer': 'https://giseo.rkomi.ru/about.html'}, False, True)
+        if data != "error":
+            self.token = data['at']
+            self.ver = res['ver']
 
     def getDiary(self, anydate):
         """
@@ -132,19 +133,21 @@ class Manager:
 
         sDate = time.localtime(wt.to_unix_time(start_week))
         eDate = time.localtime(wt.to_unix_time(end_week))
+        try:
+            data = {
+                'studentId': self.studentId,
+                'vers': self.ver,
+                'weekStart': f'{sDate.tm_year}-{str(sDate.tm_mon).zfill(2)}-{str(sDate.tm_mday).zfill(2)}',
+                'weekEnd': f'{eDate.tm_year}-{str(eDate.tm_mon).zfill(2)}-{str(eDate.tm_mday).zfill(2)}',
+                'yearId': 79783,
+                'withLaAssigns': False
+            }
+            print(data)
+            return self.send('student/diary', 'GET', data)
+        except:
+            return None
 
-        data = {
-            'studentId': self.studentId,
-            'vers': self.ver,
-            'weekStart': f'{sDate.tm_year}-{str(sDate.tm_mon).zfill(2)}-{str(sDate.tm_mday).zfill(2)}',
-            'weekEnd': f'{eDate.tm_year}-{str(eDate.tm_mon).zfill(2)}-{str(eDate.tm_mday).zfill(2)}',
-            'yearId': 79783,
-            'withLaAssigns': False
-        }
-        print(data)
-        return self.send('student/diary', 'GET', data)
-
-    def getAttachments(self, assignsIds: list[int]):
+    def getAttachments(self, assignsIds: list):
         """
         Getting attachments of specified assigns IDs
         Parameters
@@ -157,7 +160,7 @@ class Manager:
             'assignId': assignsIds
         }, 'json')
 
-    def getPastMandatory(self, start: int, end: int):
+    def getPastMandatory(self,anydate):
         """
         Получение пропущенных заданий
         Parameters
@@ -172,21 +175,39 @@ class Manager:
         ----------
           массив просроченных заданий
         """
-        sDate = time.localtime(start)
-        eDate = time.localtime(end)
-        return self.send('student/diary/pastMandatory', 'GET', {
-            'studentId': self.studentId,
-            'weekStart': f'{sDate.tm_year}-{str(sDate.tm_mon).zfill(2)}-{str(sDate.tm_mday).zfill(2)}',
-            'weekEnd': f'{eDate.tm_year}-{str(eDate.tm_mon).zfill(2)}-{str(eDate.tm_mday).zfill(2)}',
-            'yearId': 78678
-        })
+
+        start_week = wt.start_week(anydate)
+
+        end_week = wt.end_week(anydate)
+
+
+
+        sDate = time.localtime(wt.to_unix_time(start_week))
+
+        eDate = time.localtime(wt.to_unix_time(end_week))
+
+
+        try:
+            data =  {
+                'studentId': self.studentId,
+                'weekStart': f'{sDate.tm_year}-{str(sDate.tm_mon).zfill(2)}-{str(sDate.tm_mday).zfill(2)}',
+                'weekEnd': f'{eDate.tm_year}-{str(eDate.tm_mon).zfill(2)}-{str(eDate.tm_mday).zfill(2)}',
+                'yearId': 79783
+            }
+
+            print(data)
+            return self.send('student/diary/pastMandatory', 'GET', data)
+        except:
+            return None
 
     def getStudent(self):
         return self.send('student/diary/init', 'GET')
 
     def getStudentId(self):
         s = self.getStudent()
-        return s['students'][0]['studentId']
+        print(s)
+        if s != None:
+            return s['students'][0]['studentId']
 
     def logout(self):
         self.send('auth/getdata', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, True)

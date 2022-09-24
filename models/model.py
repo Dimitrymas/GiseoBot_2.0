@@ -46,17 +46,46 @@ class User(BaseModel):
         now = datetime.now()
         city_id = School.find(self.school_id).city_id
         if self.id not in managers or wt.datetime_diff_hour(self.last_connect, now):
+
+            try:
+
+                managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id), city_id=str(city_id))
+                self.update(last_connect=now)
+            finally:
+                pass
+        elif managers[self.id].token == "":
             managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id), city_id=str(city_id))
             self.update(last_connect=now)
-        return managers[self.id]
+
+        if managers[self.id].token != "":
+            return managers[self.id]
+        else:
+            return "error"
 
 
     def get_diary(self):
         c_date = self.get_week()
         
         manager = self.connectToGiseo()
-        if manager.getDiary(c_date) is not None:
-            return manager.getDiary(c_date)
+
+        if manager != "error":
+            diary = manager.getDiary(c_date)
+            self.create_json_week(diary)
+            return diary
+        else:
+            return manager
+
+    def get_pastmandory(self):
+        c_date = datetime.today()
+
+        manager = self.connectToGiseo()
+
+        if manager != "error":
+            pastmand = manager.getPastMandatory(c_date)
+            print(pastmand)
+            return pastmand
+        else:
+            return None
 
 
 
@@ -70,6 +99,7 @@ class User(BaseModel):
             weeks[self.id] = now
             self.update(last_week=now)
         return weeks[self.id]
+
     def set_week(self, what):
         if what == "minus":
             weeks[self.id] = wt.minus_week(self.get_week())
@@ -79,8 +109,12 @@ class User(BaseModel):
             weeks[self.id] = datetime.now()
 
     def get_json_week(self):
-        return jsons_week[self.id]
-
+        try:
+            w = jsons_week[self.id]
+        except Exception as e:
+            self.get_diary()
+            w = jsons_week[self.id]
+        return w
     def create_json_week(self, json):
         jsons_week[self.id] = json
         return json

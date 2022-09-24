@@ -21,6 +21,7 @@ class SendButtons:
         print(chat_id)
         if Im_user.g_password != None:
             buttons.add(types.KeyboardButton("Дневник"))
+            buttons.add(types.KeyboardButton("Долги"))
         else:
             buttons.add(types.KeyboardButton("Регистрация"))
         return buttons
@@ -36,11 +37,12 @@ class SendMessages:
         buttons = SendButtons.drow_start_button()
         bot.send_message(chat_id, "Привет я бот, у которого ты можешь узнать о своих оценках", reply_markup=buttons)
 
-    def send_menu(message):
+    def send_menu(chat_id):
         print("send_menu")
+        print(chat_id)
         try:
-            buttons = SendButtons.drow_menu_buttons(message.chat.id)
-            bot.send_message(message.chat.id, "Меню:", reply_markup=buttons)
+            buttons = SendButtons.drow_menu_buttons(chat_id)
+            bot.send_message(chat_id, "Меню:", reply_markup=buttons)
         except Exception as e:
             print(e)
 
@@ -48,15 +50,28 @@ class SendMessages:
         bot.send_message(chat_id, message, reply_markup=buttons)
 
     def send_diary_week(chat_id, diary):
+
         if diary != None:
             text, buttons = DairyController.print_diary_week(diary, chat_id)
-            bot.send_message(chat_id, text, reply_markup=buttons)
+            print(text)
+            bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
+
+
 
     def send_diary_day(chat_id, datestr):
 
         text, buttons = DairyController.print_diary_day(datestr, chat_id)
-        bot.send_message(chat_id, text, reply_markup=buttons)
+        bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
     def send_diary_lesson(chat_id, lesson_name):
         text = DairyController.print_diary_lesson(lesson_name, chat_id)
-        bot.send_message(chat_id, text)
+        bot.send_message(chat_id, text, parse_mode='Markdown')
+
+    def send_past_mand(chat_id, pastmand):
+
+        if pastmand is not None:
+            buttons = types.ReplyKeyboardMarkup()
+            buttons.add(types.KeyboardButton("Меню"))
+            text = DairyController.print_past_mand(pastmand)
+
+            bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
