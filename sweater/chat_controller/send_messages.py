@@ -64,8 +64,14 @@ class SendMessages:
         bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
     def send_diary_lesson(chat_id, lesson_name):
+
+
         text = DairyController.print_diary_lesson(lesson_name, chat_id)
-        bot.send_message(chat_id, text, parse_mode='Markdown')
+        if text is not None:
+            bot.send_message(chat_id, text, parse_mode='Markdown')
+        else:
+            bot.send_message(chat_id,"Не верная комманда, вы возвращенны в меню")
+            SendMessages.send_menu(chat_id)
 
     def send_past_mand(chat_id, pastmand):
 

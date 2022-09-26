@@ -120,7 +120,11 @@ class User(BaseModel):
         return json
 
     def get_json_day(self):
-        return jsons_day[self.id]
+        try:
+            return jsons_day[self.id]
+        except:
+            return "error"
+
 
     def create_json_day(self, json):
         jsons_day[self.id] = json
@@ -129,7 +133,7 @@ class User(BaseModel):
         manager = self.connectToGiseo()
 
         if manager != "error":
-            mail = manager.get_mail()
+            mail = manager.getMail()
             print(mail)
             return mail
         else:

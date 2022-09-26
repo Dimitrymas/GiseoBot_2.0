@@ -3,7 +3,7 @@ from middlewares.time_convert import WeekTools as wt
 from middlewares.user import MiddleUser
 
 
-type_of_work = {39:"Самостоятельная работа", }
+type_of_work = {39:"Самостоятельная работа"}
 
 
 class DairyController:
@@ -77,25 +77,29 @@ class DairyController:
     def print_diary_lesson(lesson_name, chat_id):
         im_user = MiddleUser.get_user_by_chat(chat_id)
         wday = im_user.get_json_day()
-        for lessons in wday['lessons']:
-            if lessons['subjectName'] == lesson_name:
-                mark = ' '
-                if 'assignments' in lessons:
-                    for assignments in lessons['assignments']:
-                        if 'mark' in assignments:
+        if wday != "error":
+            for lessons in wday['lessons']:
+                if lessons['subjectName'] == lesson_name:
+                    mark = ' '
+                    if 'assignments' in lessons:
+                        for assignments in lessons['assignments']:
+                            if 'mark' in assignments:
 
-                            current_mark = str(assignments['mark']['mark'])
-                            if current_mark == 'None':
-                                current_mark += '🔴'
-                            if mark != ' ':
-                                mark += '  /  ' + current_mark
-                            else:
-                                mark += ' ' + current_mark
+                                current_mark = str(assignments['mark']['mark'])
+                                if current_mark == 'None':
+                                    current_mark += '🔴'
+                                if mark != ' ':
+                                    mark += '  /  ' + current_mark
+                                else:
+                                    mark += ' ' + current_mark
 
-                        printedText = f"{lesson_name} {mark}\n{assignments['assignmentName']}"
-                    return printedText
-                else:
-                    return "Не задано"
+                            printedText = f"{lesson_name} {mark}\n{assignments['assignmentName']}"
+                        return printedText
+                    else:
+                        return "Не задано"
+        else:
+            return None
+
 
     def print_past_mand(pastmand):
         printedText = ""

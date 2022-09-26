@@ -71,14 +71,14 @@ class Manager:
             }
 
             if (method == 'GET'):
-                res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params, proxies=proxies)
+                res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params)
             elif (method == 'POST'):
                 res = session.post(f'https://giseo.rkomi.ru/webapi/{path}', data=urllib.parse.urlencode(
-                    params), proxies=proxies if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
             elif (method == 'MAIL'):
                 res = session.post(f'https://giseo.rkomi.ru/{path}', data=urllib.parse.urlencode(
-                    params), proxies=proxies if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
             if (res.status_code == 200):
                 # get new cookies from 'set-cookie' header from response and update self.cookies dictionary
@@ -225,8 +225,10 @@ class Manager:
                 'jtSorting': 'Sent%20DESC',
             }
 
-            print(data)
-            return self.send(f'asp/ajax/GetMessagesAjax.asp?AT={int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=100&jtSorting=Sent%20DESC', 'POST', data)
+            mail = self.send(f'asp/ajax/GetMessagesAjax.asp?AT={int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=100&jtSorting=Sent%20DESC', 'POST', data)
+            print(mail)
+            return mail
+
         except:
             return None
 
