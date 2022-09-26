@@ -71,8 +71,12 @@ class Manager:
 
             if (method == 'GET'):
                 res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params)
-            else:
+            elif (method == 'POST'):
                 res = session.post(f'https://giseo.rkomi.ru/webapi/{path}', data=urllib.parse.urlencode(
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+
+            elif (method == 'MAIL'):
+                res = session.post(f'https://giseo.rkomi.ru/{path}', data=urllib.parse.urlencode(
                     params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
             if (res.status_code == 200):
@@ -196,7 +200,7 @@ class Manager:
             }
 
             print(data)
-            return self.send('student/diary/pastMandatory', 'GET', data)
+            return self.send('student/diary/pastMandatory', 'GET', data, 'json')
         except:
             return None
 
@@ -208,6 +212,22 @@ class Manager:
         print(s)
         if s != None:
             return s['students'][0]['studentId']
+
+
+    def getMail(self):
+        try:
+            data = {
+                'AT': self.token,
+                'nBoxID': '1',
+                'jtStartIndex': '0',
+                'jtPageSize': '100',
+                'jtSorting': 'Sent%20DESC',
+            }
+
+            print(data)
+            return self.send(f'asp/ajax/GetMessagesAjax.asp?AT={int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=100&jtSorting=Sent%20DESC', 'POST', data)
+        except:
+            return None
 
     def logout(self):
         self.send('auth/getdata', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, True)

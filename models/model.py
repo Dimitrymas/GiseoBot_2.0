@@ -124,6 +124,16 @@ class User(BaseModel):
 
     def create_json_day(self, json):
         jsons_day[self.id] = json
+
+    def get_mail(self):
+        manager = self.connectToGiseo()
+
+        if manager != "error":
+            mail = manager.get_mail()
+            print(mail)
+            return mail
+        else:
+            return None
         
 
 

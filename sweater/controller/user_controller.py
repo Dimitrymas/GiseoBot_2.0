@@ -85,6 +85,7 @@ class UserController:
         pastmand = im_user.get_pastmandory()
 
 
+
         if pastmand != None:
             SendMessages.send_past_mand(message.chat.id, pastmand)
         else:
