@@ -1,5 +1,5 @@
 from datetime import datetime, time
-from sqlalchemy import Table, Column, Integer, VARCHAR, ForeignKey, String, Numeric, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, String, Numeric, DateTime
 from sqlalchemy_mixins.activerecord import ActiveRecordMixin
 from sqlalchemy_mixins.repr import ReprMixin
 from middlewares.time_convert import WeekTools as wt

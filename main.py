@@ -3,9 +3,6 @@ from sweater.chat_controller import listen_all
 
 from telebot import apihelper
 
-apihelper.proxy = {'https': 'https://user-uuid-96848eb9df224f4dba7b480365573ef5:465f91945752@zagent98.hola.org:22222'}
-
-
 
 
 def start():
