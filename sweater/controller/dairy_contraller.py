@@ -102,7 +102,10 @@ class DairyController:
         print(pastmand)
         for m in pastmand:
             subjectName = m['subjectName']
-            type = type_of_work[m['typeId']]
+            if type in type_of_work.keys():
+                type = type_of_work[m['typeId']]
+            else:
+                type = "Неизвестный тип работы"
             assignmentName = m['assignmentName']
             date = wt.curr_date(str(m['dueDate']))
 
