@@ -2,6 +2,8 @@ from models.model import *
 import requests
 import json
 
+proxies = {'https': 'https://user-uuid-96848eb9df224f4dba7b480365573ef5:465f91945752@zagent98.hola.org:22222'}
+
 
 
 def AddScools(s_json, city_id):
@@ -11,7 +13,7 @@ def AddScools(s_json, city_id):
         School.create(id=schools["id"], name=schools["name"], city_id=city_id)
 
 
-cities_json = json.loads(requests.get("https://giseo.rkomi.ru/webapi/prepareloginform").text).get("provinces")
+cities_json = json.loads(requests.get("https://giseo.rkomi.ru/webapi/prepareloginform", proxies=proxies).text).get("provinces")
 
 for city in cities_json:
     if city["id"] < 0:
@@ -23,5 +25,5 @@ cities = City.all()
 
 
 for city in cities:
-    AddScools(requests.get(f"https://giseo.rkomi.ru/webapi/loginform?cid=2&sid=11&pid=-{city.id}&cn={city.id}&sft=2&LASTNAME=sft").text, city.id)
+    AddScools(requests.get(f"https://giseo.rkomi.ru/webapi/loginform?cid=2&sid=11&pid=-{city.id}&cn={city.id}&sft=2&LASTNAME=sft", proxies=proxies).text, city.id)
 
