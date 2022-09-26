@@ -71,14 +71,14 @@ class Manager:
             }
 
             if (method == 'GET'):
-                res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params)
+                res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params, proxies=proxies)
             elif (method == 'POST'):
                 res = session.post(f'https://giseo.rkomi.ru/webapi/{path}', data=urllib.parse.urlencode(
-                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+                    params), proxies=proxies if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
             elif (method == 'MAIL'):
                 res = session.post(f'https://giseo.rkomi.ru/{path}', data=urllib.parse.urlencode(
-                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+                    params), proxies=proxies if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
             if (res.status_code == 200):
                 # get new cookies from 'set-cookie' header from response and update self.cookies dictionary
