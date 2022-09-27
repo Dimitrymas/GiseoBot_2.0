@@ -58,7 +58,7 @@ class DairyController:
     def print_diary_day(datestr, chat_id):
 
         im_user = MiddleUser.get_user_by_chat(chat_id)
-        print(datestr)
+
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         printedText = ""
         printText = ""
@@ -103,7 +103,7 @@ class DairyController:
 
     def print_past_mand(pastmand):
         printedText = ""
-        print(pastmand)
+
         for m in pastmand:
             type = "Неизвестный тип работы"
             subjectName = m['subjectName']

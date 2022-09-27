@@ -24,7 +24,7 @@ class Manager:
         self.password = password
         self.school_id = school_id
         self.city_id = city_id
-        print(self.login, self.password, self.school_id, self.city_id)
+
         self.auth()
         self.studentId = self.getStudentId()
 
@@ -147,7 +147,7 @@ class Manager:
                 'yearId': 79783,
                 'withLaAssigns': False
             }
-            print(data)
+
             return self.send('student/diary', 'GET', data)
         except:
             return None
@@ -200,7 +200,7 @@ class Manager:
                 'yearId': 79783
             }
 
-            print(data)
+
             return self.send('student/diary/pastMandatory', 'GET', data, 'json')
         except:
             return None
@@ -210,7 +210,7 @@ class Manager:
 
     def getStudentId(self):
         s = self.getStudent()
-        print(s)
+
         if s != None:
             return s['students'][0]['studentId']
 
@@ -226,7 +226,7 @@ class Manager:
             }
 
             mail = self.send(f'asp/ajax/GetMessagesAjax.asp?AT={int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=100&jtSorting=Sent%20DESC', 'POST', data)
-            print(mail)
+
             return mail
 
         except:

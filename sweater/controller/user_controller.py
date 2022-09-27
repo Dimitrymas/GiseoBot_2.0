@@ -26,7 +26,6 @@ class UserController:
 
     def registration_step_2(message):
         school = School.query.filter(School.name == message.text).first()
-        print(school)
         if school is None:
             SendMessages.send(message.chat.id, "Некорректная комманда")
         else:
@@ -64,7 +63,6 @@ class UserController:
     def get_diary(message):
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         diary = im_user.get_diary()
-        print("diary:", diary)
 
         if diary != "error":
             SendMessages.send_diary_week(message.chat.id, diary)

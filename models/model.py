@@ -82,7 +82,6 @@ class User(BaseModel):
 
         if manager != "error":
             pastmand = manager.getPastMandatory(c_date)
-            print(pastmand)
             return pastmand
         else:
             return None
@@ -134,7 +133,6 @@ class User(BaseModel):
 
         if manager != "error":
             mail = manager.getMail()
-            print(mail)
             return mail
         else:
             return None

@@ -8,7 +8,6 @@ proxies = {'https': 'https://user-uuid-96848eb9df224f4dba7b480365573ef5:465f9194
 
 def AddScools(s_json, city_id):
     schools_json = json.loads(s_json)
-    print(schools_json)
     for schools in schools_json.get("items"):
         School.create(id=schools["id"], name=schools["name"], city_id=city_id)
 
