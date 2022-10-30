@@ -43,24 +43,23 @@ class User(BaseModel):
 
 
     def connectToGiseo(self):
+        if Manager(login="Маслаков", password="415678", school_id="8", city_id="168") == "error":
+            return "server_error"
+
         now = datetime.now()
         city_id = School.find(self.school_id).city_id
-        if self.id not in managers or wt.datetime_diff_hour(self.last_connect, now):
-
-            try:
-
-                managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id), city_id=str(city_id))
-                self.update(last_connect=now)
-            finally:
-                pass
-        elif managers[self.id].token == "":
+        if self.id not in managers or wt.datetime_diff_hour(self.last_connect, now) or managers[self.id].token == "":
             managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id), city_id=str(city_id))
-            self.update(last_connect=now)
-
-        if managers[self.id].token != "":
-            return managers[self.id]
+            print(managers[self.id])
+            if managers[self.id].token != "":
+                self.update(last_connect=now)
+                return managers[self.id]
+            else:
+                return "error"
         else:
-            return "error"
+            return managers[self.id]
+
+
 
 
     def get_diary(self):
@@ -68,7 +67,8 @@ class User(BaseModel):
         
         manager = self.connectToGiseo()
 
-        if manager != "error":
+        if manager != "error" and manager != "server_error":
+
             diary = manager.getDiary(c_date)
             self.create_json_week(diary)
             return diary
@@ -80,11 +80,13 @@ class User(BaseModel):
 
         manager = self.connectToGiseo()
 
-        if manager != "error":
+        if manager != "error" and manager != "server_error":
             pastmand = manager.getPastMandatory(c_date)
             return pastmand
         else:
-            return None
+            return manager
+
+
 
 
 
@@ -136,11 +138,15 @@ class User(BaseModel):
             return mail
         else:
             return None
-        
 
+    def get_one_mail(self, number):
+        manager = self.connectToGiseo()
 
-
-
+        if manager != "error":
+            theme, text, file, filename = manager.getOneMail(number)
+            return theme, text, file, filename
+        else:
+            return None
 
 
 Base.metadata.create_all(engine)

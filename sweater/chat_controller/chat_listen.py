@@ -24,6 +24,11 @@ def listen_text(message):
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         im_user.set_week("plus")
         UserController.get_diary(message)
+
+    elif message.text == "Почта":
+        SendMessages.send(message.chat.id, "Загрузка почты")
+        UserController.get_mail(message)
+
     elif message.text == "Текущая неделя":
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         im_user.set_week("that")
@@ -35,5 +40,7 @@ def listen_text(message):
     elif message.text == "Меню":
         SendMessages.send_menu(message.chat.id)
 
+    elif wt.is_mail_button(message.text):
+        UserController.get_one_mail(message)
 
 

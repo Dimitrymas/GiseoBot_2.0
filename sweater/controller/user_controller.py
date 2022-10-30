@@ -63,6 +63,9 @@ class UserController:
     def get_diary(message):
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         diary = im_user.get_diary()
+        if diary == "server_error":
+            SendMessages.send(message.chat.id, "В данный момент giseo не доступен")
+            return
 
         if diary != "error":
             SendMessages.send_diary_week(message.chat.id, diary)
@@ -82,11 +85,50 @@ class UserController:
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         pastmand = im_user.get_pastmandory()
 
-        if pastmand != None:
+        if pastmand == "server_error":
+            SendMessages.send(message.chat.id, "В данный момент giseo не доступен")
+            return
+
+        elif pastmand != "error":
             SendMessages.send_past_mand(message.chat.id, pastmand)
         else:
             SendMessages.send(message.chat.id, "Неправильный пароль или логин")
             UserController.registration_step_start(message)
+
+    def get_mail(message):
+        im_user = MiddleUser.get_user_by_chat(message.chat.id)
+        mail = im_user.get_mail()
+        if mail == "server_error":
+            SendMessages.send(message.chat.id, "В данный момент giseo не доступен")
+            return
+
+        elif mail != "error":
+            SendMessages.send_mail(message.chat.id, mail)
+        else:
+            SendMessages.send(message.chat.id, "Неправильный пароль или логин")
+            UserController.registration_step_start(message)
+
+
+    def get_one_mail(message):
+        im_user = MiddleUser.get_user_by_chat(message.chat.id)
+        number = message.text.split("(")[1].split(")")[0]
+        theme, text, file, filename = im_user.get_one_mail(number)
+        if theme == '':
+            theme = 'Без темы'
+        if text.find("BR") + text.find("nbsp") >= 0:
+            text = text.replace('<BR>', '\n').replace('&quot', '').replace('&nbsp;', '').replace('<pre>', '').replace('</pre>', '').replace('&gt;', ': ')
+
+        if text == '':
+            text = 'Текста нет'
+        if filename is not None:
+            with open(f"./files/{filename}", "wb") as fl:
+                fl.write(file)
+            file=filename
+
+
+
+        SendMessages.send_one_mail(message.chat.id, theme, text, file)
+
 
 
 

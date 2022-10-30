@@ -74,5 +74,11 @@ class WeekTools:
     def is_lesson_button(message):
         return message in lessons
 
+    def is_mail_button(message):
+
+        if message.find("(") != -1 and len(message.split("(")[1]) == 9:
+            return True
+        else:
+            return False
 
 

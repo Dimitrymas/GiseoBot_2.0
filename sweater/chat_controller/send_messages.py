@@ -22,6 +22,7 @@ class SendButtons:
         if Im_user.g_password != None:
             buttons.add(types.KeyboardButton("Дневник"))
             buttons.add(types.KeyboardButton("Долги"))
+            buttons.add(types.KeyboardButton("Почта"))
         else:
             buttons.add(types.KeyboardButton("Регистрация"))
         return buttons
@@ -40,7 +41,7 @@ class SendMessages:
         try:
             buttons = SendButtons.drow_menu_buttons(chat_id)
             bot.send_message(chat_id, "Меню:", reply_markup=buttons)
-        except Exception as e:
+        except:
             pass
 
     def send(chat_id, message, buttons=None):
@@ -48,10 +49,9 @@ class SendMessages:
 
     def send_diary_week(chat_id, diary):
 
-        if diary != None:
-            text, buttons = DairyController.print_diary_week(diary, chat_id)
+        text, buttons = DairyController.print_diary_week(diary, chat_id)
 
-            bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
+        bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
 
 
@@ -71,10 +71,22 @@ class SendMessages:
             SendMessages.send_menu(chat_id)
 
     def send_past_mand(chat_id, pastmand):
+        buttons = types.ReplyKeyboardMarkup()
+        buttons.add(types.KeyboardButton("Меню"))
+        text = DairyController.print_past_mand(pastmand)
+        bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
-        if pastmand is not None:
-            buttons = types.ReplyKeyboardMarkup()
-            buttons.add(types.KeyboardButton("Меню"))
-            text = DairyController.print_past_mand(pastmand)
+    def send_mail(chat_id, mail):
+        text, murkup = DairyController.print_mail(mail)
 
-            bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
+        murkup.add(types.KeyboardButton("Меню"))
+        bot.send_message(chat_id, text, reply_markup=murkup, parse_mode='Markdown')
+
+    def send_one_mail(chat_id, theme, text, file):
+
+        if file != 'Нет файлов':
+            bot.send_message(chat_id, f"*{theme}*\n     _{text}_\n     Eсть файл", parse_mode='Markdown')
+            bot.send_document(chat_id, open(f'./files/{file}', encoding='latin-1'))
+        else:
+            print(text)
+            bot.send_message(chat_id, f"*{theme}*\n     _{text}_\n     {file}", parse_mode='Markdown')

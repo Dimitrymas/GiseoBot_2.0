@@ -112,6 +112,47 @@ class DairyController:
             assignmentName = m['assignmentName']
             date = wt.curr_date(str(m['dueDate']))
 
-            printedText += f"*{subjectName} {type}* \n{assignmentName}\nДата сдачи: {date}"
+            printedText += f"*{subjectName} {type}* \n{assignmentName}\nДата сдачи: {date}\n\n"
 
         return printedText
+
+    def print_mail(mail):
+        murkup = types.ReplyKeyboardMarkup()
+        printedText = ""
+        count = 0
+        for one_mail in mail["Records"]:
+            if count == 10:
+                break
+            count += 1
+            theme = one_mail["Subj"]
+            if theme == '':
+                theme = 'Не указана'
+
+            from_name = one_mail['FromName']
+
+            number = one_mail['MessageId']
+
+            sent_date = one_mail['Sent']
+
+            to_name = one_mail['SentTo']
+
+            if one_mail['Read'] == 'Y':
+                read = 'Да'
+            else:
+                read = 'Нет'
+
+            printedText += f'*{count}) Номер сообщения:{number}*\n        _Тема: {theme}\n        От: {from_name}\n        Для:{to_name}\n        Дата отправки: {sent_date}\n        Прочитано: {read }_\n\n'
+
+            murkup.add(types.KeyboardButton(f"{theme} ({number})"))
+
+
+
+        if printedText == "":
+            printedText = 'Сообщения не найдены'
+
+
+        return printedText, murkup
+
+
+
+

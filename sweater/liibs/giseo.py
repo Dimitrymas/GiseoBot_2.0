@@ -1,4 +1,3 @@
-
 from middlewares.time_convert import WeekTools as wt
 
 import requests
@@ -6,6 +5,8 @@ import urllib
 import hashlib
 import time
 import json
+
+
 proxies = {'https': 'https://user-uuid-96848eb9df224f4dba7b480365573ef5:465f91945752@zagent98.hola.org:22222'}
 
 
@@ -27,7 +28,6 @@ class Manager:
 
         self.auth()
         self.studentId = self.getStudentId()
-
 
     def send(self, path: str, method: str = 'GET', params: dict = {}, contentType: str = 'x-www-form-urlencoded',
              headers: dict = {}, withToken: bool = True, returnJson: bool = True):
@@ -74,17 +74,30 @@ class Manager:
                 res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params, proxies=proxies)
             elif (method == 'POST'):
                 res = session.post(f'https://giseo.rkomi.ru/webapi/{path}', data=urllib.parse.urlencode(
-                    params), proxies=proxies if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params), proxies=proxies)
 
             elif (method == 'MAIL'):
-                res = session.post(f'https://giseo.rkomi.ru/{path}', data=urllib.parse.urlencode(
-                    params), proxies=proxies if contentType == 'x-www-form-urlencoded' else json.dumps(params))
+                urlpath = f'https://giseo.rkomi.ru/{path}'
+                res = session.post(urlpath, data=urllib.parse.urlencode(
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params), proxies=proxies)
+
+
+
+            elif (method == 'ONEMAIL'):
+                res = session.get(f'https://giseo.rkomi.ru/{path}', params=params, proxies=proxies)
+
+            print(res.status_code)
 
             if (res.status_code == 200):
                 # get new cookies from 'set-cookie' header from response and update self.cookies dictionary
                 # Set-Cookie header: https://developer.mozilla.org/ru/docs/Web/HTTP/Headers/Set-Cookie
                 self.cookies.update(res.cookies.get_dict())
-                return res.json() if returnJson else res
+
+                if method == 'ONEMAIL':
+                    return res.text
+                else:
+                    return res.json() if returnJson else res
+
             elif (res.status_code == 401):
                 self.auth()
                 return self.send(path, method, params, contentType, headers, withToken, returnJson)
@@ -110,7 +123,8 @@ class Manager:
             'ver': res['ver']
         }
 
-        data = self.send('login', 'POST', post_data, 'x-www-form-urlencoded', {'Referer': 'https://giseo.rkomi.ru/about.html'}, False, True)
+        data = self.send('login', 'POST', post_data, 'x-www-form-urlencoded',
+                         {'Referer': 'https://giseo.rkomi.ru/about.html'}, False, True)
         if data != "error":
             self.token = data['at']
             self.ver = res['ver']
@@ -134,8 +148,6 @@ class Manager:
 
         end_week = wt.end_week(anydate)
 
-
-
         sDate = time.localtime(wt.to_unix_time(start_week))
         eDate = time.localtime(wt.to_unix_time(end_week))
         try:
@@ -152,7 +164,7 @@ class Manager:
         except:
             return None
 
-    def getAttachments(self, assignsIds: list):
+    def getAttachments(self, assignsIds):
         """
         Getting attachments of specified assigns IDs
         Parameters
@@ -163,9 +175,22 @@ class Manager:
 
         return self.send(f'student/diary/get-attachments?studentId={self.studentId}', 'POST', {
             'assignId': assignsIds
-        }, 'json')
+        }, 'json', returnJson=False)
 
-    def getPastMandatory(self,anydate):
+    def getMailAttachments(self, fileId):
+        """
+        Getting attachments of specified assigns IDs
+        Parameters
+        ----------
+        assignsIds: list[int]
+          ID of assign
+        """
+
+        return self.send(f'attachments/{fileId}', 'GET', {
+            "filename": "df"
+        }, 'json', returnJson=False)
+
+    def getPastMandatory(self, anydate):
         """
         Получение пропущенных заданий
         Parameters
@@ -173,7 +198,7 @@ class Manager:
         start: int
           start day of needed diary in UNIX time
 
-        end: int
+        end:int
           end day of needed diary in UNIX time
 
         Возвращает
@@ -185,21 +210,17 @@ class Manager:
 
         end_week = wt.end_week(anydate)
 
-
-
         sDate = time.localtime(wt.to_unix_time(start_week))
 
         eDate = time.localtime(wt.to_unix_time(end_week))
 
-
         try:
-            data =  {
+            data = {
                 'studentId': self.studentId,
                 'weekStart': f'{sDate.tm_year}-{str(sDate.tm_mon).zfill(2)}-{str(sDate.tm_mday).zfill(2)}',
                 'weekEnd': f'{eDate.tm_year}-{str(eDate.tm_mon).zfill(2)}-{str(eDate.tm_mday).zfill(2)}',
                 'yearId': 79783
             }
-
 
             return self.send('student/diary/pastMandatory', 'GET', data, 'json')
         except:
@@ -214,23 +235,38 @@ class Manager:
         if s != None:
             return s['students'][0]['studentId']
 
-
     def getMail(self):
         try:
             data = {
                 'AT': self.token,
                 'nBoxID': '1',
                 'jtStartIndex': '0',
-                'jtPageSize': '100',
+                'jtPageSize': '10',
                 'jtSorting': 'Sent%20DESC',
             }
 
-            mail = self.send(f'asp/ajax/GetMessagesAjax.asp?AT={int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=100&jtSorting=Sent%20DESC', 'POST', data)
-
+            mail = self.send(
+                f'asp/ajax/GetMessagesAjax.asp?AT=0{int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=10&jtSorting=Sent%20DESC',
+                'MAIL', data)
             return mail
 
         except:
             return None
 
+    def getOneMail(self, number):
+        mail = self.send(f'asp/Messages/readmessage.asp?AT=0{int(self.token)}&MID={number}&MBID=1', 'ONEMAIL')
+        theme = mail.split('Тема')[1].split(" type=\'text\' disabled=\'disabled\' value=")[1].split(
+            '" /></div></div><div class="form-group"><label class="control-label ">Прикреплённые файлы<')[0].split('"')[
+            1]
+        message = mail.split('Текст</label><div class="">')[1].split('</div></div>')[0].replace('_', ' ').replace('*', '×')
+
+        if mail.find('<div class="file-attachment"') < 0:
+            return theme, message, "Нет файлов", None
+        else:
+            filename = mail.split('onclick="openAttachment(')[1].split(');">')[0].split("', ")[0][1::].replace(" ", "-")
+            fileid = mail.split('onclick="openAttachment(')[1].split(');">')[0].split("', ")[1]
+            file = self.getMailAttachments(fileId=fileid)
+            return theme, message, file.content, filename
+
     def logout(self):
-        self.send('auth/getdata', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, True)
+        print(self.send('auth/logout', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, False))
