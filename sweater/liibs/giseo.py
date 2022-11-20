@@ -8,7 +8,7 @@ import json
 
 
 proxies = {'https': 'https://user-uuid-96848eb9df224f4dba7b480365573ef5:465f91945752@zagent98.hola.org:22222'}
-
+proxies = None
 
 def md5(string: str):
     return hashlib.md5(string.encode()).hexdigest()
@@ -86,7 +86,6 @@ class Manager:
             elif (method == 'ONEMAIL'):
                 res = session.get(f'https://giseo.rkomi.ru/{path}', params=params, proxies=proxies)
 
-            print(res.status_code)
 
             if (res.status_code == 200):
                 # get new cookies from 'set-cookie' header from response and update self.cookies dictionary
@@ -241,12 +240,12 @@ class Manager:
                 'AT': self.token,
                 'nBoxID': '1',
                 'jtStartIndex': '0',
-                'jtPageSize': '10',
+                'jtPageSize': '5',
                 'jtSorting': 'Sent%20DESC',
             }
 
             mail = self.send(
-                f'asp/ajax/GetMessagesAjax.asp?AT=0{int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=10&jtSorting=Sent%20DESC',
+                f'asp/ajax/GetMessagesAjax.asp?AT=0{int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=5&jtSorting=Sent%20DESC',
                 'MAIL', data)
             return mail
 
@@ -269,4 +268,4 @@ class Manager:
             return theme, message, file.content, filename
 
     def logout(self):
-        print(self.send('auth/logout', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, False))
+        self.send('auth/logout', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, False)

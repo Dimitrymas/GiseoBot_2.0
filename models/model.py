@@ -50,7 +50,6 @@ class User(BaseModel):
         city_id = School.find(self.school_id).city_id
         if self.id not in managers or wt.datetime_diff_hour(self.last_connect, now) or managers[self.id].token == "":
             managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id), city_id=str(city_id))
-            print(managers[self.id])
             if managers[self.id].token != "":
                 self.update(last_connect=now)
                 return managers[self.id]

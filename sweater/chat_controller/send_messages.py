@@ -74,6 +74,8 @@ class SendMessages:
         buttons = types.ReplyKeyboardMarkup()
         buttons.add(types.KeyboardButton("Меню"))
         text = DairyController.print_past_mand(pastmand)
+        if not text:
+            text = 'Нет пропущенных заданий'
         bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
     def send_mail(chat_id, mail):
@@ -86,7 +88,6 @@ class SendMessages:
 
         if file != 'Нет файлов':
             bot.send_message(chat_id, f"*{theme}*\n     _{text}_\n     Eсть файл", parse_mode='Markdown')
-            bot.send_document(chat_id, open(f'./files/{file}', encoding='latin-1'))
+            bot.send_document(chat_id, open(f'./files/{file}', 'rb'))
         else:
-            print(text)
             bot.send_message(chat_id, f"*{theme}*\n     _{text}_\n     {file}", parse_mode='Markdown')
