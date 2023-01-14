@@ -1,9 +1,9 @@
 from telebot import types
+
 from middlewares.time_convert import WeekTools as wt
 from middlewares.user import MiddleUser
 
-
-type_of_work = {39:"Самостоятельная работа"}
+type_of_work = {39: "Самостоятельная работа"}
 
 
 class DairyController:
@@ -53,17 +53,14 @@ class DairyController:
             markup.add(button3, button2, button1)
 
             markup.add(types.KeyboardButton('Меню'))
-            return first+printedText, markup
+            return first + printedText, markup
 
     def print_diary_day(datestr, chat_id):
-
         im_user = MiddleUser.get_user_by_chat(chat_id)
-
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         printedText = ""
         printText = ""
         for wday in im_user.get_json_week()['weekDays']:
-
             if wday["date"] == datestr:
                 im_user.create_json_day(wday)
                 printedText += (DairyController.print_day(printText, wday))
@@ -100,7 +97,6 @@ class DairyController:
         else:
             return None
 
-
     def print_past_mand(pastmand):
         printedText = ""
 
@@ -134,25 +130,16 @@ class DairyController:
 
             sent_date = one_mail['Sent']
 
-            to_name = one_mail['SentTo']
-
             if one_mail['Read'] == 'Y':
                 read = 'Да'
             else:
                 read = 'Нет'
 
-            printedText += f'*{count}) Номер сообщения:{number}*\n        _Тема: {theme}\n        От: {from_name}\n        Для:{to_name}\n        Дата отправки: {sent_date}\n        Прочитано: {read }_\n\n'
+            printedText += f'*{count}) Номер сообщения:{number}*\n        _Тема: {theme}\n        От: {from_name}\n        Дата отправки: {sent_date}\n        Прочитано: {read}_\n\n'
 
             murkup.add(types.KeyboardButton(f"{theme} ({number})"))
-
-
 
         if printedText == "":
             printedText = 'Сообщения не найдены'
 
-
         return printedText, murkup
-
-
-
-

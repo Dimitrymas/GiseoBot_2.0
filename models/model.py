@@ -1,10 +1,11 @@
-from datetime import datetime, time
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, ForeignKey, String, Numeric, DateTime
 from sqlalchemy_mixins.activerecord import ActiveRecordMixin
 from sqlalchemy_mixins.repr import ReprMixin
+
 from middlewares.time_convert import WeekTools as wt
 from sweater import engine, Base, session
-
 from sweater.liibs.giseo import Manager
 
 managers = {}
@@ -12,10 +13,12 @@ weeks = {}
 jsons_week = {}
 jsons_day = {}
 
+
 class BaseModel(Base, ActiveRecordMixin, ReprMixin):
     __abstract__ = True
     __repr__ = ReprMixin.__repr__
     pass
+
 
 class City(BaseModel):
     __tablename__ = "city"
@@ -41,7 +44,6 @@ class User(BaseModel):
     school_id = Column(Integer, ForeignKey(School.id))
     last_week = Column(DateTime, nullable=True)
 
-
     def connectToGiseo(self):
         if Manager(login="Маслаков", password="415678", school_id="8", city_id="168") == "error":
             return "server_error"
@@ -49,7 +51,8 @@ class User(BaseModel):
         now = datetime.now()
         city_id = School.find(self.school_id).city_id
         if self.id not in managers or wt.datetime_diff_hour(self.last_connect, now) or managers[self.id].token == "":
-            managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id), city_id=str(city_id))
+            managers[self.id] = Manager(login=self.g_name, password=self.g_password, school_id=str(self.school_id),
+                                        city_id=str(city_id))
             if managers[self.id].token != "":
                 self.update(last_connect=now)
                 return managers[self.id]
@@ -58,12 +61,9 @@ class User(BaseModel):
         else:
             return managers[self.id]
 
-
-
-
     def get_diary(self):
         c_date = self.get_week()
-        
+
         manager = self.connectToGiseo()
 
         if manager != "error" and manager != "server_error":
@@ -84,10 +84,6 @@ class User(BaseModel):
             return pastmand
         else:
             return manager
-
-
-
-
 
     def get_day(self, c_date):
         manager = self.connectToGiseo()
@@ -115,6 +111,7 @@ class User(BaseModel):
             self.get_diary()
             w = jsons_week[self.id]
         return w
+
     def create_json_week(self, json):
         jsons_week[self.id] = json
         return json
@@ -124,7 +121,6 @@ class User(BaseModel):
             return jsons_day[self.id]
         except:
             return "error"
-
 
     def create_json_day(self, json):
         jsons_day[self.id] = json
@@ -142,8 +138,7 @@ class User(BaseModel):
         manager = self.connectToGiseo()
 
         if manager != "error":
-            theme, text, file, filename = manager.getOneMail(number)
-            return theme, text, file, filename
+            return manager.getOneMail(number)
         else:
             return None
 

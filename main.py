@@ -3,7 +3,7 @@ import time
 from sweater import bot
 from sweater.chat_controller import listen_all
 
-if __name__== '__main__':
+if __name__ == '__main__':
     while True:
         try:
             bot.polling(non_stop=True, interval=0)
@@ -12,6 +12,3 @@ if __name__== '__main__':
             print(e)
             time.sleep(5)
             continue
-
-
-

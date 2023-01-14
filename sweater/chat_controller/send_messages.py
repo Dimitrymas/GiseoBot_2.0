@@ -2,7 +2,6 @@ import telebot
 from telebot import types
 
 from middlewares.user import MiddleUser
-from models.model import User
 from sweater import bot
 from sweater.controller.dairy_contraller import DairyController
 
@@ -13,7 +12,6 @@ class SendButtons:
         button1 = types.InlineKeyboardButton(text="Регистрация", callback_data="registration")
         markup.add(button1)
         return markup
-
 
     def drow_menu_buttons(chat_id):
         buttons = types.ReplyKeyboardMarkup()
@@ -53,21 +51,17 @@ class SendMessages:
 
         bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
-
-
     def send_diary_day(chat_id, datestr):
-
         text, buttons = DairyController.print_diary_day(datestr, chat_id)
         bot.send_message(chat_id, text, reply_markup=buttons, parse_mode='Markdown')
 
     def send_diary_lesson(chat_id, lesson_name):
 
-
         text = DairyController.print_diary_lesson(lesson_name, chat_id)
         if text is not None:
             bot.send_message(chat_id, text, parse_mode='Markdown')
         else:
-            bot.send_message(chat_id,"Не верная комманда, вы возвращенны в меню")
+            bot.send_message(chat_id, "Не верная комманда, вы возвращенны в меню")
             SendMessages.send_menu(chat_id)
 
     def send_past_mand(chat_id, pastmand):
@@ -84,10 +78,8 @@ class SendMessages:
         murkup.add(types.KeyboardButton("Меню"))
         bot.send_message(chat_id, text, reply_markup=murkup, parse_mode='Markdown')
 
-    def send_one_mail(chat_id, theme, text, file):
-
-        if file != 'Нет файлов':
-            bot.send_message(chat_id, f"*{theme}*\n     _{text}_\n     Eсть файл", parse_mode='Markdown')
-            bot.send_document(chat_id, open(f'./files/{file}', 'rb'))
-        else:
-            bot.send_message(chat_id, f"*{theme}*\n     _{text}_\n     {file}", parse_mode='Markdown')
+    def send_one_mail(chat_id, sender, theme, text, file_names, file_status):
+        bot.send_message(chat_id, f"От *{sender}*\nТема: *{theme}*\nТекст: *{text}*\n *{file_status}*",
+                         parse_mode='Markdown')
+        for file_name in file_names:
+            bot.send_document(chat_id, open(f'./files/{file_name}', 'rb'))

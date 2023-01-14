@@ -1,14 +1,13 @@
-from middlewares.time_convert import WeekTools as wt
+import hashlib
+import json
+import time
+import urllib
 
 import requests
-import urllib
-import hashlib
-import time
-import json
+from bs4 import BeautifulSoup
 
+from middlewares.time_convert import WeekTools as wt
 
-proxies = {'https': 'https://user-uuid-96848eb9df224f4dba7b480365573ef5:465f91945752@zagent98.hola.org:22222'}
-proxies = None
 
 def md5(string: str):
     return hashlib.md5(string.encode()).hexdigest()
@@ -71,21 +70,20 @@ class Manager:
             }
 
             if (method == 'GET'):
-                res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params, proxies=proxies)
+                res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params)
             elif (method == 'POST'):
                 res = session.post(f'https://giseo.rkomi.ru/webapi/{path}', data=urllib.parse.urlencode(
-                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params), proxies=proxies)
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
             elif (method == 'MAIL'):
                 urlpath = f'https://giseo.rkomi.ru/{path}'
                 res = session.post(urlpath, data=urllib.parse.urlencode(
-                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params), proxies=proxies)
+                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
 
 
 
             elif (method == 'ONEMAIL'):
-                res = session.get(f'https://giseo.rkomi.ru/{path}', params=params, proxies=proxies)
-
+                res = session.get(f'https://giseo.rkomi.ru/{path}', params=params)
 
             if (res.status_code == 200):
                 # get new cookies from 'set-cookie' header from response and update self.cookies dictionary
@@ -93,7 +91,7 @@ class Manager:
                 self.cookies.update(res.cookies.get_dict())
 
                 if method == 'ONEMAIL':
-                    return res.text
+                    return res.content
                 else:
                     return res.json() if returnJson else res
 
@@ -253,19 +251,30 @@ class Manager:
             return None
 
     def getOneMail(self, number):
-        mail = self.send(f'asp/Messages/readmessage.asp?AT=0{int(self.token)}&MID={number}&MBID=1', 'ONEMAIL')
-        theme = mail.split('Тема')[1].split(" type=\'text\' disabled=\'disabled\' value=")[1].split(
-            '" /></div></div><div class="form-group"><label class="control-label ">Прикреплённые файлы<')[0].split('"')[
-            1]
-        message = mail.split('Текст</label><div class="">')[1].split('</div></div>')[0].replace('_', ' ').replace('*', '×')
+        files = []
+        mail = self.send(f'asp/Messages/readmessage.asp?at=0{int(self.token)}&MID={number}&MBID=1', 'ONEMAIL')
+        soup = BeautifulSoup(mail, "lxml")
+        inputs = soup.find_all('input', class_='form-control')
+        sender = inputs[0]['value']
+        theme = inputs[4]['value']
+        files_el = soup.find_all(class_='file-attachment')
+        for file in files_el:
+            op = str(file['onclick']).replace('openAttachment(', '').replace(');', '').replace("'", '').split(', ')
+            file_name = op[0].replace(' ', '_')
+            file = self.getMailAttachments(fileId=op[1]).content
+            with open(f"./files/{file_name}", "wb") as n_file:
+                n_file.write(file)
+            files.append(file_name)
 
-        if mail.find('<div class="file-attachment"') < 0:
-            return theme, message, "Нет файлов", None
+        if len(files) > 0:
+            selector = '#message_body > div > div > div:nth-child(3) > div'
         else:
-            filename = mail.split('onclick="openAttachment(')[1].split(');">')[0].split("', ")[0][1::].replace(" ", "-")
-            fileid = mail.split('onclick="openAttachment(')[1].split(');">')[0].split("', ")[1]
-            file = self.getMailAttachments(fileId=fileid)
-            return theme, message, file.content, filename
+            selector = '#message_body > div > div > div:nth-child(2) > div'
+        text_el = str(soup.select(selector)[0])
+
+        text = text_el.replace('<div class="">', '').replace('</div>', '').replace('<br/>', '\n')
+
+        return sender, theme, text, files
 
     def logout(self):
         self.send('auth/logout', 'POST', {'at': self.token, "VER": self.ver}, 'x-www-form-urlencoded', {}, False, False)

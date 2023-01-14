@@ -1,8 +1,8 @@
+from middlewares.time_convert import WeekTools as wt
 from middlewares.user import MiddleUser
 from sweater.chat_controller.send_messages import SendMessages
 from sweater.controller.user_controller import UserController
-from middlewares.time_convert import WeekTools as wt
-from models.model import User
+
 
 def listen_text(message):
     if message.text == "Дневник":
@@ -42,5 +42,3 @@ def listen_text(message):
 
     elif wt.is_mail_button(message.text):
         UserController.get_one_mail(message)
-
-

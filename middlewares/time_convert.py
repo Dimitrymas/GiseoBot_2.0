@@ -2,8 +2,12 @@ import time
 from datetime import datetime, timedelta, date
 
 weekdays = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
-month_list = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
-lessons = ["Иностранный язык (английский)", "История России. Всеобщая история", "Геометрия", "Физика", "Русский язык", "Родной язык (русский)", "География", "Биология", "Физическая культура", "Литература", "Информатика", "Алгебра", "Обществознание", "Химия", "Основы безопасности жизнедеятельности"]
+month_list = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября',
+              'декабря']
+lessons = ["Иностранный язык (английский)", "История России. Всеобщая история", "Геометрия", "Физика", "Русский язык",
+           "Родной язык (русский)", "География", "Биология", "Физическая культура", "Литература", "Информатика",
+           "Алгебра", "Обществознание", "Химия", "Основы безопасности жизнедеятельности"]
+
 
 class WeekTools:
     def start_week(ddate):
@@ -32,7 +36,7 @@ class WeekTools:
 
     def curr_date(cdate):
         cdate_splited = WeekTools.stringdate_to_mass(cdate)
-        mounth = month_list[int(cdate_splited[1])-1]
+        mounth = month_list[int(cdate_splited[1]) - 1]
         day = cdate_splited[2]
         year = cdate_splited[0]
         return f"{day} {mounth} {year} года"
@@ -57,7 +61,6 @@ class WeekTools:
         datetime_str = cdate.split("(")[1].split(")")[0].split("/")
         return f"{datetime_str[2]}-{datetime_str[1]}-{datetime_str[0]}T00:00:00"
 
-
     def datetime_to_sec(dt):
         microseconds = time.mktime(dt.timetuple()) * 1000000 + dt.microsecond
         return int(round(microseconds / float(1000000)))
@@ -80,5 +83,3 @@ class WeekTools:
             return True
         else:
             return False
-
-
