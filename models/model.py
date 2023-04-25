@@ -45,9 +45,6 @@ class User(BaseModel):
     last_week = Column(DateTime, nullable=True)
 
     def connectToGiseo(self):
-        if Manager(login="Маслаков", password="415678", school_id="8", city_id="168") == "error":
-            return "server_error"
-
         now = datetime.now()
         city_id = School.find(self.school_id).city_id
         if self.id not in managers or wt.datetime_diff_hour(self.last_connect, now) or managers[self.id].token == "":
@@ -142,6 +139,19 @@ class User(BaseModel):
         else:
             return None
 
+    def get_lesson_attachment(self, id):
+        manager: Manager = self.connectToGiseo()
+        files = {}
+        if manager != "error":
+            attachments = manager.getLessonAttachment(id)
+            for attachment in attachments:
+                for file in attachment['attachments']:
+                    file_id = file['id']
+                    file_name = file['originalFileName']
+                    files[file_name] = manager.getAttachments(file_id, file_name)
+            return files
+        else:
+            return None
 
 Base.metadata.create_all(engine)
 BaseModel.set_session(session)

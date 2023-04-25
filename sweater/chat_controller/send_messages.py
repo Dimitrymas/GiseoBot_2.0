@@ -1,6 +1,6 @@
 import telebot
 from telebot import types
-
+from io import BytesIO
 from middlewares.user import MiddleUser
 from sweater import bot
 from sweater.controller.dairy_contraller import DairyController
@@ -57,9 +57,11 @@ class SendMessages:
 
     def send_diary_lesson(chat_id, lesson_name):
 
-        text = DairyController.print_diary_lesson(lesson_name, chat_id)
+        text, files = DairyController.print_diary_lesson(lesson_name, chat_id)
         if text is not None:
             bot.send_message(chat_id, text, parse_mode='Markdown')
+            for file_name, file_content in files.items():
+                bot.send_document(chat_id, document=file_content, visible_file_name=file_name)
         else:
             bot.send_message(chat_id, "Не верная комманда, вы возвращенны в меню")
             SendMessages.send_menu(chat_id)
@@ -74,12 +76,11 @@ class SendMessages:
 
     def send_mail(chat_id, mail):
         text, murkup = DairyController.print_mail(mail)
-
         murkup.add(types.KeyboardButton("Меню"))
         bot.send_message(chat_id, text, reply_markup=murkup, parse_mode='Markdown')
 
-    def send_one_mail(chat_id, sender, theme, text, file_names, file_status):
-        bot.send_message(chat_id, f"От *{sender}*\nТема: *{theme}*\nТекст: *{text}*\n *{file_status}*",
+    def send_one_mail(chat_id, sender, theme, text, files, file_status):
+        bot.send_message(chat_id, f"*От:* _{sender}_\n*Тема*: _{theme}_\n*Текст:* _{text}_\n\n*{file_status}*",
                          parse_mode='Markdown')
-        for file_name in file_names:
-            bot.send_document(chat_id, open(f'./files/{file_name}', 'rb'))
+        for file_name, file_content in files.items():
+            bot.send_document(chat_id, document=file_content, visible_file_name=file_name)

@@ -1,4 +1,5 @@
 from telebot import types
+from telebot.types import Message
 
 from middlewares.time_convert import WeekTools as wt
 from middlewares.user import MiddleUser
@@ -88,7 +89,7 @@ class UserController:
             SendMessages.send(message.chat.id, "Неправильный пароль или логин")
             UserController.registration_step_start(message)
 
-    def get_mail(message):
+    def get_mail(message: Message):
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         mail = im_user.get_mail()
         if mail == "server_error":
@@ -101,19 +102,19 @@ class UserController:
             SendMessages.send(message.chat.id, "Неправильный пароль или логин")
             UserController.registration_step_start(message)
 
-    def get_one_mail(message):
+    def get_one_mail(message: Message):
         im_user = MiddleUser.get_user_by_chat(message.chat.id)
         number = message.text.split("(")[1].split(")")[0]
-        sender, theme, text, file_names = im_user.get_one_mail(number)
+        sender, theme, text, files = im_user.get_one_mail(number)
         if theme == '':
             theme = 'Без темы'
 
         if text == '':
             text = 'Текста нет'
 
-        if len(file_names) > 0:
+        if len(files) > 0:
             file_status = 'Есть файлы'
         else:
             file_status = 'Нет файлов'
 
-        SendMessages.send_one_mail(message.chat.id, sender, theme, text, file_names, file_status)
+        SendMessages.send_one_mail(message.chat.id, sender, theme, text, files, file_status)

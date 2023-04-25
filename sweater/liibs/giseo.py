@@ -4,7 +4,6 @@ import time
 import urllib
 
 import requests
-from bs4 import BeautifulSoup
 
 from middlewares.time_convert import WeekTools as wt
 
@@ -66,34 +65,22 @@ class Manager:
                 'at': self.token if withToken else None,
                 'content-type': f'application/{contentType}; charset=UTF-8',
                 # cookies are required to access certain addresses
-                'cookie': '; '.join(cookie)
+                'cookie': '; '.join(cookie),
+                'origin': 'https://giseo.rkomi.ru',
+
             }
 
-            if (method == 'GET'):
+            if method == 'GET':
                 res = session.get(f'https://giseo.rkomi.ru/webapi/{path}', params=params)
-            elif (method == 'POST'):
+            elif method == 'POST':
                 res = session.post(f'https://giseo.rkomi.ru/webapi/{path}', data=urllib.parse.urlencode(
                     params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
-
-            elif (method == 'MAIL'):
-                urlpath = f'https://giseo.rkomi.ru/{path}'
-                res = session.post(urlpath, data=urllib.parse.urlencode(
-                    params) if contentType == 'x-www-form-urlencoded' else json.dumps(params))
-
-
-
-            elif (method == 'ONEMAIL'):
-                res = session.get(f'https://giseo.rkomi.ru/{path}', params=params)
 
             if (res.status_code == 200):
                 # get new cookies from 'set-cookie' header from response and update self.cookies dictionary
                 # Set-Cookie header: https://developer.mozilla.org/ru/docs/Web/HTTP/Headers/Set-Cookie
                 self.cookies.update(res.cookies.get_dict())
-
-                if method == 'ONEMAIL':
-                    return res.content
-                else:
-                    return res.json() if returnJson else res
+                return res.json() if returnJson else res
 
             elif (res.status_code == 401):
                 self.auth()
@@ -161,7 +148,7 @@ class Manager:
         except:
             return None
 
-    def getAttachments(self, assignsIds):
+    def getLessonAttachment(self, assignsId):
         """
         Getting attachments of specified assigns IDs
         Parameters
@@ -171,10 +158,11 @@ class Manager:
         """
 
         return self.send(f'student/diary/get-attachments?studentId={self.studentId}', 'POST', {
-            'assignId': assignsIds
-        }, 'json', returnJson=False)
+            'assignId': [assignsId]
+        }, 'json', returnJson=False).json()
 
-    def getMailAttachments(self, fileId):
+    def getAttachments(self, file_id, file_name):
+        print(file_name)
         """
         Getting attachments of specified assigns IDs
         Parameters
@@ -183,9 +171,9 @@ class Manager:
           ID of assign
         """
 
-        return self.send(f'attachments/{fileId}', 'GET', {
-            "filename": "df"
-        }, 'json', returnJson=False)
+        return self.send(f'attachments/{file_id}', 'GET', {
+            "filename": file_name
+        }, 'json', returnJson=False).content
 
     def getPastMandatory(self, anydate):
         """
@@ -233,46 +221,38 @@ class Manager:
             return s['students'][0]['studentId']
 
     def getMail(self):
-        try:
-            data = {
-                'AT': self.token,
-                'nBoxID': '1',
-                'jtStartIndex': '0',
-                'jtPageSize': '5',
-                'jtSorting': 'Sent%20DESC',
-            }
+        json_data = {"filterContext": {
+            "selectedData": [
+                {
+                    "filterId": "MailBox",
+                    "filterValue": "Inbox",
+                    "filterText": "Входящие"
+                }
+            ]
+        },
+            "fields": [
+                "author",
+                "subject",
+                "sent"
+            ],
+            "page": 1,
+            "pageSize": 5,
+            "search": None,
+            "order": None
+        }
+        mail = self.send('mail/registry', params=json_data, method='POST', contentType='json', returnJson=True)
+        return mail['rows']
 
-            mail = self.send(
-                f'asp/ajax/GetMessagesAjax.asp?AT=0{int(self.token)}&nBoxID=1&jtStartIndex=0&jtPageSize=5&jtSorting=Sent%20DESC',
-                'MAIL', data)
-            return mail
-
-        except:
-            return None
-
-    def getOneMail(self, number):
-        files = []
-        mail = self.send(f'asp/Messages/readmessage.asp?at=0{int(self.token)}&MID={number}&MBID=1', 'ONEMAIL')
-        soup = BeautifulSoup(mail, "lxml")
-        inputs = soup.find_all('input', class_='form-control')
-        sender = inputs[0]['value']
-        theme = inputs[4]['value']
-        files_el = soup.find_all(class_='file-attachment')
-        for file in files_el:
-            op = str(file['onclick']).replace('openAttachment(', '').replace(');', '').replace("'", '').split(', ')
-            file_name = op[0].replace(' ', '_')
-            file = self.getMailAttachments(fileId=op[1]).content
-            with open(f"./files/{file_name}", "wb") as n_file:
-                n_file.write(file)
-            files.append(file_name)
-
-        if len(files) > 0:
-            selector = '#message_body > div > div > div:nth-child(3) > div'
-        else:
-            selector = '#message_body > div > div > div:nth-child(2) > div'
-        text_el = str(soup.select(selector)[0])
-
-        text = text_el.replace('<div class="">', '').replace('</div>', '').replace('<br/>', '\n')
+    def getOneMail(self, id):
+        files = {}
+        mail = self.send(f'mail/messages/{id}/read?userId={self.studentId}', 'GET')
+        sender = mail['author']['name']
+        theme = mail['subject']
+        text = mail['text']
+        for file in mail['fileAttachments']:
+            file_id = file['id']
+            file_name = file['name']
+            files[file_name] = self.getAttachments(file_id=file_id, file_name=file_name)
 
         return sender, theme, text, files
 

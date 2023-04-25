@@ -2,6 +2,7 @@ from telebot import types
 
 from middlewares.time_convert import WeekTools as wt
 from middlewares.user import MiddleUser
+from models.model import User
 
 type_of_work = {39: "Самостоятельная работа"}
 
@@ -33,7 +34,6 @@ class DairyController:
         return printedText
 
     def print_diary_week(json, chat_id):
-
         if json != None:
             im_user = MiddleUser.get_user_by_chat(chat_id)
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -72,16 +72,18 @@ class DairyController:
         return printedText, markup
 
     def print_diary_lesson(lesson_name, chat_id):
-        im_user = MiddleUser.get_user_by_chat(chat_id)
+        im_user: User = MiddleUser.get_user_by_chat(chat_id)
         wday = im_user.get_json_day()
         if wday != "error":
-            for lessons in wday['lessons']:
-                if lessons['subjectName'] == lesson_name:
+            for lesson in wday['lessons']:
+                if lesson['subjectName'] == lesson_name:
                     mark = ' '
-                    if 'assignments' in lessons:
-                        for assignments in lessons['assignments']:
+                    print(lesson_name)
+                    if 'assignments' in lesson:
+                        print(lesson)
+                        for assignments in lesson['assignments']:
+                            files = im_user.get_lesson_attachment(assignments['id'])
                             if 'mark' in assignments:
-
                                 current_mark = str(assignments['mark']['mark'])
                                 if current_mark == 'None':
                                     current_mark += '🔴'
@@ -90,10 +92,10 @@ class DairyController:
                                 else:
                                     mark += ' ' + current_mark
 
-                            printedText = f"{lesson_name} {mark}\n{assignments['assignmentName']}"
-                        return printedText
+                            printed_text = f"{lesson_name} {mark}\n{assignments['assignmentName']}"
+                            return printed_text, files
                     else:
-                        return "Не задано"
+                        return "Не задано", {}
         else:
             return None
 
@@ -116,29 +118,21 @@ class DairyController:
         murkup = types.ReplyKeyboardMarkup()
         printedText = ""
         count = 0
-        for one_mail in mail["Records"]:
-            if count == 10:
-                break
+        for one_mail in mail:
             count += 1
-            theme = one_mail["Subj"]
+            theme = one_mail['subject']
             if theme == '':
                 theme = 'Не указана'
 
-            from_name = one_mail['FromName']
+            from_name = one_mail['author']
 
-            number = one_mail['MessageId']
+            id = one_mail['id']
 
-            sent_date = one_mail['Sent']
+            sent_date = one_mail['sent'].replace('T', ' ')
 
-            if one_mail['Read'] == 'Y':
-                read = 'Да'
-            else:
-                read = 'Нет'
+            printedText += f'*{count}) Номер сообщения:{id}*\n        *Тема:* _{theme}_\n        *От:* _{from_name}_\n        *Дата отправки:* _{sent_date}_\n\n'
 
-            printedText += f'*{count}) Номер сообщения:{number}*\n        _Тема: {theme}\n        От: {from_name}\n        Дата отправки: {sent_date}\n        Прочитано: {read}_\n\n'
-
-            murkup.add(types.KeyboardButton(f"{theme} ({number})"))
-
+            murkup.add(types.KeyboardButton(f"{theme} ({id})"))
         if printedText == "":
             printedText = 'Сообщения не найдены'
 
