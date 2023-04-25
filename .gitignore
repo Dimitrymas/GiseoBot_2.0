@@ -1,1 +1,8 @@
 /files/
+__pycache__/
+.idea/
+config.py
+diary.json
+tests.py
+*.pyc
+/venv/
